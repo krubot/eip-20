@@ -2,6 +2,11 @@
 pragma solidity ^0.8.0;
 
 contract Example {
+  struct airdrop {
+    address airdropAddress;
+    uint256 airdropAmount;
+  }
+  
   string private _name;
 
   string private _symbol;
@@ -16,14 +21,14 @@ contract Example {
 
   event Approval(address indexed owner,address indexed spender,uint256 value);
 
-  constructor(string memory name_,string memory symbol_,uint256 totalSupply_) {
+  constructor(string memory name_,string memory symbol_,airdrop memory airdrop_) {
     _name = name_;
     _symbol = symbol_;
 
-    _totalSupply = totalSupply_;
-    _balances[msg.sender] = totalSupply_;
+    _totalSupply = airdrop_.airdropAmount;
+    _balances[airdrop_.airdropAddress] = airdrop_.airdropAmount;
 
-    emit Transfer(address(0), msg.sender, totalSupply_);
+    emit Transfer(address(0), airdrop_.airdropAddress, airdrop_.airdropAmount);
   }
 
   function name() public view virtual returns (string memory) {

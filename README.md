@@ -13,8 +13,8 @@ npm install
 Now you'll need to setup the environment variable to be used in the deployment by creating a `.env` file with the following content:
 
 ```
-GOERLI_RPC_URL='<goerli-rpc-url>'
-PRIVATE_KEY='<private-key>'
+GOERLI_RPC_URL="<goerli-rpc-url>"
+PRIVATE_KEY=["<private-key-1>","<private-key-2>",...]
 ```
 
 You can use a rpc provider like `infura` and `Alchemy` for goerli and your private key can be grabbed from metamask. **Please make sure not to commit your .env file up, this can lead to loss of funds.**
