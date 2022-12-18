@@ -6,7 +6,7 @@ contract Example {
     address airdropAddress;
     uint256 airdropAmount;
   }
-  
+
   string private _name;
 
   string private _symbol;
@@ -21,14 +21,13 @@ contract Example {
 
   event Approval(address indexed owner,address indexed spender,uint256 value);
 
-  constructor(string memory name_,string memory symbol_,airdrop memory airdrop_) {
+  constructor(string memory name_,string memory symbol_,airdrop[] memory airdrop_) {
     _name = name_;
     _symbol = symbol_;
 
-    _totalSupply = airdrop_.airdropAmount;
-    _balances[airdrop_.airdropAddress] = airdrop_.airdropAmount;
-
-    emit Transfer(address(0), airdrop_.airdropAddress, airdrop_.airdropAmount);
+    for (uint i = 0; i < airdrop_.length; i++) {
+      _mint(airdrop_[i].airdropAddress,airdrop_[i].airdropAmount);
+    }
   }
 
   function name() public view virtual returns (string memory) {
@@ -72,6 +71,18 @@ contract Example {
     _spendAllowance(from, spender, amount);
     _transfer(from, to, amount);
     return true;
+  }
+
+  function _mint(address account, uint256 amount) internal virtual {
+    require(account != address(0), "ERC20: mint to the zero address");
+
+    _totalSupply += amount;
+    unchecked {
+        // Overflow not possible: balance + amount is at most totalSupply + amount, which is checked above.
+        _balances[account] += amount;
+    }
+
+    emit Transfer(address(0), account, amount);
   }
 
   function _transfer(address from,address to,uint256 amount) internal virtual {

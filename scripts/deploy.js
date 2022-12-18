@@ -11,7 +11,11 @@ async function main() {
   console.log("Account balance: ", (await accounts[0].getBalance()).toString());
 
   if (process.env.GOERLI_EIP_20_CONTRACT == null) {
-    var airdrop = {airdropAddress: accounts[0].address,airdropAmount: ethers.BigNumber.toString(ethers.BigNumber.from(1) * ethers.BigNumber.from(10) ** ethers.BigNumber.from(18))};
+    var airdrop = []
+
+    for (account of accounts) {
+      airdrop.push({airdropAddress: account.address,airdropAmount: ethers.BigNumber.from(1).mul(ethers.BigNumber.from(10).pow(18))});
+    }
 
     const Example = await ethers.getContractFactory("Example");
     const example = await Example.deploy("MyToken","HIX",airdrop);
