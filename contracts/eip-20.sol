@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract Example {
+contract EIP20 {
+
   struct airdrop {
     address airdropAddress;
     uint256 airdropAmount;
@@ -21,7 +22,12 @@ contract Example {
 
   event Approval(address indexed owner,address indexed spender,uint256 value);
 
-  constructor(string memory name_,string memory symbol_,airdrop[] memory airdrop_) {
+  // Uncomment if running without a proxy initilisation
+  // constructor(string memory name_,string memory symbol_,airdrop[] memory airdrop_) {
+  //   initialize(name_,symbol_,airdrop_);
+  // }
+
+  function initialize(string memory name_,string memory symbol_,airdrop[] memory airdrop_) public virtual {
     _name = name_;
     _symbol = symbol_;
 
@@ -83,6 +89,20 @@ contract Example {
     }
 
     emit Transfer(address(0), account, amount);
+  }
+
+  function _burn(address account, uint256 amount) internal virtual {
+    require(account != address(0), "ERC20: burn from the zero address");
+
+    uint256 accountBalance = _balances[account];
+    require(accountBalance >= amount, "ERC20: burn amount exceeds balance");
+    unchecked {
+        _balances[account] = accountBalance - amount;
+        // Overflow not possible: amount <= accountBalance <= totalSupply.
+        _totalSupply -= amount;
+    }
+
+    emit Transfer(account, address(0), amount);
   }
 
   function _transfer(address from,address to,uint256 amount) internal virtual {

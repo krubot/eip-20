@@ -2,8 +2,30 @@ require("dotenv").config();
 
 const { writeFileSync } = require("fs");
 const { ethers } = require("hardhat");
+const readlinePromises = require('readline');
 
-async function main() {
+const rl = readlinePromises.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  terminal: true,
+});
+
+rl.question('Arguments file for deployment: ', (constructorArgsFile) => {
+  if (constructorArgsFile != "") {
+    var argModule = require(process.cwd() + "/" + constructorArgsFile);
+  } else {
+    var argModule = "";
+  }
+
+  deploy(argModule).catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+
+  rl.close();
+});
+
+async function deploy(deployArgs) {
   const accounts = await ethers.getSigners();
 
   console.log("Deploying contracts with the account: ", accounts[0].address);
@@ -11,28 +33,18 @@ async function main() {
   console.log("Account balance: ", (await accounts[0].getBalance()).toString());
 
   if (process.env.GOERLI_EIP_20_CONTRACT == null) {
-    var airdrop = []
+    const EIP20 = await ethers.getContractFactory("EIP20");
 
-    for (account of accounts) {
-      airdrop.push({airdropAddress: account.address,airdropAmount: ethers.BigNumber.from(1).mul(ethers.BigNumber.from(10).pow(18))});
-    }
+    const eip20 = await EIP20.deploy(...deployArgs);
 
-    const Example = await ethers.getContractFactory("Example");
-    const example = await Example.deploy("MyToken","HIX",airdrop);
+    console.log("Transaction hash of the deployment: ", eip20.deployTransaction.hash);
 
-    console.log("Transaction hash of the deployment: ", example.deployTransaction.hash);
+    await eip20.deployed();
 
-    await example.deployed();
+    console.log("Contract has been deployed at: ", eip20.address);
 
-    console.log("Contract has been deployed at: ", example.address);
-
-    writeFileSync('.env','GOERLI_EIP_20_CONTRACT=\"' + example.address + '\"\n',{flag:'a+'});
+    writeFileSync('.env','GOERLI_EIP_20_CONTRACT=\"' + eip20.address + '\"\n',{flag:'a+'});
   } else {
     console.log("Contract has already been deployed at: ", process.env.GOERLI_EIP_20_CONTRACT);
   }
 }
-
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});

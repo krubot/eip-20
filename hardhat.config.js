@@ -1,7 +1,8 @@
 require("@nomicfoundation/hardhat-toolbox")
 require("dotenv").config()
+require("./tasks")
 
-module.exports = {
+let hardhat = {
   solidity: "0.8.9",
   networks: {
     goerli: {
@@ -15,5 +16,15 @@ module.exports = {
     tests: "./test",
     cache: "./build/cache",
     artifacts: "./build/artifacts"
-  },
+  }
 };
+
+if (process.env.ETHERSCAN_API_KEY != null) {
+  hardhat.etherscan = {
+    apiKey: {
+      goerli: process.env.ETHERSCAN_API_KEY
+    }
+  };
+}
+
+module.exports = hardhat;
