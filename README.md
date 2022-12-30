@@ -52,7 +52,6 @@ npx hardhat run scripts/deploy.js
 Depending on if you have specified a constructor in the contract section you might need to add a arguments file as input. The following output assumes you have uncommented the constructor and use our given `scripts/arguments.js` file but the run without constructor will not need any input so in that case you can press enter to continue:
 
 ```
-Compiled 1 Solidity file successfully
 Arguments file for deployment: scripts/arguments.js
 (node:2183596) ExperimentalWarning: stream/web is an experimental feature. This feature could change at any time
 (Use `node --trace-warnings ...` to show where the warning was created)
@@ -120,4 +119,22 @@ Your output should then look like the following:
     value: BigNumber { value: "1000000000000000000" }
   ]
 }
+```
+
+## Cancel transactions
+
+Sometimes you might have long running pending transactions that need to be canceled. This can be because you've set the gas price too low or maybe nodes for other reasons don't want to build that transaction into a new block. You can cancel any pending transaction by deploying a new one with the same nonce as that transaction will no data. This is all automated by running a hardhat cancel task as follows:
+
+```
+npx hardhat cancel
+```
+
+An example output of this command has been run bellow:
+
+```
+(node:2714002) ExperimentalWarning: stream/web is an experimental feature. This feature could change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Nonce of the transactions to cancel is:  248
+Submitted tx hash is:  0x6d97fc975a89262ecaabf2ec24ba60413e079a0b55dc75d39c75612758ab99ef
+Transactions have now been cancelled
 ```
