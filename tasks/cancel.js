@@ -1,5 +1,3 @@
-require("dotenv").config();
-
 task("cancel", "Cancel any currently pending transactions within that first account", async () => {
   const accounts = await ethers.getSigners();
   const deployer = accounts[0].address;

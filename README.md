@@ -33,7 +33,7 @@ Note that before you compile and deploy, if you are just using this contract by 
 // }
 ```
 
-This will then require arguments for the deployment which will be discussed in the next section.
+This will then require arguments for the deployment which will be discussed in the next section. On the other hand if you are instead just using the default `initialize` function note that the `initializer` modifier will mean it can only be run once from a constructor hence you won't be able to initials after the fact unless its from a proxy contract. This is a security mechanism to stop another EOA running this function.
 
 ## Compile and deploy
 
@@ -83,6 +83,22 @@ for verification on the block explorer. Waiting for verification result...
 
 Successfully verified contract EIP20 on Etherscan.
 https://goerli.etherscan.io/address/0x0F7aCFE8A171B001D9f9826122c8fc3fAc117D65#code
+```
+
+## Run a transaction
+
+You might like to quickly run a transaction call against the deployed contract, this can be used for testing. The following is an example of function call on `name` with a deployed contract that has been setup with a constructor:
+
+```
+npx hardhat tx --function-name name --function-args ""
+```
+
+Your out should look like the following:
+
+```
+(node:2816938) ExperimentalWarning: stream/web is an experimental feature. This feature could change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+MyToken
 ```
 
 ## View logs

@@ -14,6 +14,10 @@ contract EIP20 {
 
   uint256 private _totalSupply;
 
+  bool private _initialized;
+
+  bool private _initializing;
+
   mapping(address => uint256) private _balances;
 
   mapping(address => mapping(address => uint256)) private _allowances;
@@ -27,7 +31,23 @@ contract EIP20 {
   //   initialize(name_,symbol_,airdrop_);
   // }
 
-  function initialize(string memory name_,string memory symbol_,airdrop[] memory airdrop_) public virtual {
+  modifier initializer() {
+    require(_initializing || _isConstructor() || !_initialized, "Contract instance has already been initialized");
+
+    bool isTopLevelCall = !_initializing;
+    if (isTopLevelCall) {
+      _initializing = true;
+      _initialized = true;
+    }
+
+    _;
+
+    if (isTopLevelCall) {
+      _initializing = false;
+    }
+  }
+
+  function initialize(string memory name_,string memory symbol_,airdrop[] memory airdrop_) public virtual initializer {
     _name = name_;
     _symbol = symbol_;
 
@@ -79,13 +99,25 @@ contract EIP20 {
     return true;
   }
 
+  function _isConstructor() private view returns (bool) {
+    // extcodesize checks the size of the code stored in an address, and
+    // address returns the current address. Since the code is still not
+    // deployed when running a constructor, any checks on its code size will
+    // yield zero, making it an effective way to detect if a contract is
+    // under construction or not.
+    address self = address(this);
+    uint256 cs;
+    assembly { cs := extcodesize(self) }
+    return cs == 0;
+  }
+
   function _mint(address account, uint256 amount) internal virtual {
     require(account != address(0), "ERC20: mint to the zero address");
 
     _totalSupply += amount;
     unchecked {
-        // Overflow not possible: balance + amount is at most totalSupply + amount, which is checked above.
-        _balances[account] += amount;
+      // Overflow not possible: balance + amount is at most totalSupply + amount, which is checked above.
+      _balances[account] += amount;
     }
 
     emit Transfer(address(0), account, amount);
@@ -97,9 +129,9 @@ contract EIP20 {
     uint256 accountBalance = _balances[account];
     require(accountBalance >= amount, "ERC20: burn amount exceeds balance");
     unchecked {
-        _balances[account] = accountBalance - amount;
-        // Overflow not possible: amount <= accountBalance <= totalSupply.
-        _totalSupply -= amount;
+      _balances[account] = accountBalance - amount;
+      // Overflow not possible: amount <= accountBalance <= totalSupply.
+      _totalSupply -= amount;
     }
 
     emit Transfer(account, address(0), amount);
