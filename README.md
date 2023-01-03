@@ -90,7 +90,7 @@ https://goerli.etherscan.io/address/0x0F7aCFE8A171B001D9f9826122c8fc3fAc117D65#c
 You might like to quickly run a transaction call against the deployed contract, this can be used for testing. The following is an example of function call on `name` with a deployed contract that has been setup with a constructor:
 
 ```
-npx hardhat tx --function-name name --function-args ""
+npx hardhat tx --function-name name --function-args [""]
 ```
 
 Your out should look like the following:
