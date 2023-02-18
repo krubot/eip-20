@@ -22,19 +22,6 @@ You can use a rpc provider like `infura` and `Alchemy` for goerli and your priva
 
 To find the Etherscan API key you can follow this guide [here](https://info.etherscan.com/api-keys/).
 
-## Contract
-
-Note that before you compile and deploy, if you are just using this contract by itself or you don't want to initialize it externally you will likely want to uncomment the constructor function. It will look like the following:
-
-```
-// Uncomment if running without a proxy initilisation
-// constructor(string memory name_,string memory symbol_,airdrop[] memory airdrop_) {
-//   initialize(name_,symbol_,airdrop_);
-// }
-```
-
-This will then require arguments for the deployment which will be discussed in the next section. On the other hand if you are instead just using the default `initialize` function note that the `initializer` modifier will mean it can only be run once from a constructor hence you won't be able to initials after the fact unless its from a proxy contract. This is a security mechanism to stop another EOA running this function.
-
 ## Compile and deploy
 
 To compile this solidity code you'll need to run hardhat cli using `npx` like the following:
