@@ -26,10 +26,6 @@ contract EIP20 {
 
   event Approval(address indexed owner,address indexed spender,uint256 value);
 
-  constructor(string memory name_,string memory symbol_,airdrop[] memory airdrop_) {
-    initialize(name_,symbol_,airdrop_);
-  }
-
   modifier initializer() {
     require(_initializing || _isConstructor() || !_initialized, "Contract instance has already been initialized");
 
