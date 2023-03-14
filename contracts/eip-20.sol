@@ -2,11 +2,12 @@
 pragma solidity ^0.8.0;
 
 contract EIP20 {
-
   struct airdrop {
     address airdropAddress;
     uint256 airdropAmount;
   }
+
+  address private _owner;
 
   string private _name;
 
@@ -18,6 +19,10 @@ contract EIP20 {
 
   bool private _initializing;
 
+  bool private _configured;
+
+  bool private _configuring;
+
   mapping(address => uint256) private _balances;
 
   mapping(address => mapping(address => uint256)) private _allowances;
@@ -26,8 +31,15 @@ contract EIP20 {
 
   event Approval(address indexed owner,address indexed spender,uint256 value);
 
+  event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+  modifier onlyOwner() {
+    require(_owner == msg.sender, "Ownable: caller is not the owner");
+    _;
+  }
+
   modifier initializer() {
-    require(_initializing || _isConstructor() || !_initialized, "Contract instance has already been initialized");
+    require(_initializing || !_initialized, "Contract instance has already been initialized");
 
     bool isTopLevelCall = !_initializing;
     if (isTopLevelCall) {
@@ -42,7 +54,33 @@ contract EIP20 {
     }
   }
 
-  function initialize(string memory name_,string memory symbol_,airdrop[] memory airdrop_) public virtual initializer {
+  modifier configurer() {
+    require(_configuring || !_configured, "Contract instance has already been initialized");
+
+    bool isTopLevelCall = !_configuring;
+    if (isTopLevelCall) {
+      _configuring = true;
+      _configured = true;
+    }
+
+    _;
+
+    if (isTopLevelCall) {
+      _configuring = false;
+    }
+  }
+
+  constructor(address owner_) {
+    require(owner_ != address(0), "Ownable: new owner is the zero address");
+    _owner = owner_;
+    emit OwnershipTransferred(address(0), _owner);
+  }
+
+  function initialize(address owner_) public virtual onlyOwner initializer {
+    transferOwnership(owner_);
+  }
+
+  function configure(string memory name_,string memory symbol_,airdrop[] memory airdrop_) public virtual onlyOwner configurer {
     _name = name_;
     _symbol = symbol_;
 
@@ -94,16 +132,15 @@ contract EIP20 {
     return true;
   }
 
-  function _isConstructor() private view returns (bool) {
-    // extcodesize checks the size of the code stored in an address, and
-    // address returns the current address. Since the code is still not
-    // deployed when running a constructor, any checks on its code size will
-    // yield zero, making it an effective way to detect if a contract is
-    // under construction or not.
-    address self = address(this);
-    uint256 cs;
-    assembly { cs := extcodesize(self) }
-    return cs == 0;
+  function transferOwnership(address newOwner) public virtual onlyOwner {
+    require(newOwner != address(0), "Ownable: new owner is the zero address");
+    _transferOwnership(newOwner);
+  }
+
+  function _transferOwnership(address newOwner) internal virtual {
+    address oldOwner = _owner;
+    _owner = newOwner;
+    emit OwnershipTransferred(oldOwner, newOwner);
   }
 
   function _mint(address account, uint256 amount) internal virtual {

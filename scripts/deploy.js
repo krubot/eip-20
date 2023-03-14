@@ -1,25 +1,6 @@
 require("dotenv").config();
 
-const { writeFileSync } = require("fs");
-const { ethers, artifacts, network } = require("hardhat");
-const readlinePromises = require("readline");
-
-const rl = readlinePromises.createInterface({
-  input: process.stdin,
-  output: process.stdout,
-  terminal: true,
-});
-
-rl.question("Arguments file for deployment: ", (constructorArgsFile) => {
-  var argModule = require(process.cwd() + "/" + constructorArgsFile);
-
-  deploy(argModule).catch((error) => {
-    console.error(error);
-    process.exitCode = 1;
-  });
-
-  rl.close();
-});
+const { ethers, network } = require("hardhat");
 
 async function deploy(deployArgs) {
   const accounts = await ethers.getSigners();
@@ -44,7 +25,8 @@ async function deploy(deployArgs) {
 
   var deploymentAddress = await factory.getAddress(
     ethers.utils.hexConcat([
-      EIP20.bytecode
+      EIP20.bytecode,
+      abiCoder.encode(["address"],[process.env[networkName + '_FACTORY_CONTRACT']]),
     ]),
     salt
   );
@@ -56,7 +38,7 @@ async function deploy(deployArgs) {
   var proxyAddress = await factory.getAddress(
     ethers.utils.hexConcat([
       Proxy.bytecode,
-      abiCoder.encode(["address","bytes"],deployArgs),
+      abiCoder.encode(["address"],[process.env[networkName + '_FACTORY_CONTRACT']]),
     ]),
     salt
   );
@@ -66,7 +48,8 @@ async function deploy(deployArgs) {
   if ((await ethers.provider.getCode(deploymentAddress)) == "0x") {
     var codeDeploy = await factory.deploy(
       ethers.utils.hexConcat([
-        EIP20.bytecode
+        EIP20.bytecode,
+        abiCoder.encode(["address"],[process.env[networkName + '_FACTORY_CONTRACT']]),
       ]),
       salt
     );
@@ -84,7 +67,7 @@ async function deploy(deployArgs) {
     var codeDeploy = await factory.deploy(
       ethers.utils.hexConcat([
         Proxy.bytecode,
-        abiCoder.encode(["address","bytes"],deployArgs),
+        abiCoder.encode(["address"],[process.env[networkName + '_FACTORY_CONTRACT']]),
       ]),
       salt
     );
@@ -98,3 +81,8 @@ async function deploy(deployArgs) {
     console.log("Deployment of Proxy contract from factory has already been deployed");
   }
 }
+
+deploy().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

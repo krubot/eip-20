@@ -1,16 +1,13 @@
 require("dotenv").config();
 
-task("logs", "Gets the Transfer logs on the current contract", async () => {
+task("logs", "Gets the Transfer logs on the current contract")
+  .addParam("address", "The contract to attach too")
+  .setAction(async (taskArgs) => {
   const accounts = await ethers.getSigners()
 
   const EIP20 = await ethers.getContractFactory("EIP20");
 
-  if (process.env.GOERLI_EIP_20_CONTRACT == null) {
-    console.error("Contract has not been deployed, please deploy first using hardhat.");
-    return
-  }
-
-  var eip20 = EIP20.attach(process.env.GOERLI_EIP_20_CONTRACT);
+  var eip20 = EIP20.attach(taskArgs.address);
 
   let eventFilter = eip20.filters.Transfer();
 

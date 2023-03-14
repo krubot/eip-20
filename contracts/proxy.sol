@@ -29,6 +29,15 @@ interface IBeacon {
 }
 
 contract Proxy {
+  address private _owner;
+
+  bool private _initialized;
+
+  bool private _initializing;
+
+  bool private _configured;
+
+  bool private _configuring;
 
   bytes32 private constant _ROLLBACK_SLOT = 0x4910fdfa16fed3260ed0e7147f7cc6da11a60208b5b9406d12a635614ffd9143;
 
@@ -44,7 +53,56 @@ contract Proxy {
 
   event AdminChanged(address previousAdmin, address newAdmin);
 
-  constructor(address addr,bytes memory data) {
+  event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+  modifier onlyOwner() {
+    require(_owner == msg.sender, "Ownable: caller is not the owner");
+    _;
+  }
+
+  modifier initializer() {
+    require(_initializing || !_initialized, "Contract instance has already been initialized");
+
+    bool isTopLevelCall = !_initializing;
+    if (isTopLevelCall) {
+      _initializing = true;
+      _initialized = true;
+    }
+
+    _;
+
+    if (isTopLevelCall) {
+      _initializing = false;
+    }
+  }
+
+  modifier configurer() {
+    require(_configuring || !_configured, "Contract instance has already been initialized");
+
+    bool isTopLevelCall = !_configuring;
+    if (isTopLevelCall) {
+      _configuring = true;
+      _configured = true;
+    }
+
+    _;
+
+    if (isTopLevelCall) {
+      _configuring = false;
+    }
+  }
+
+  constructor(address owner_) {
+    require(owner_ != address(0), "Ownable: new owner is the zero address");
+    _owner = owner_;
+    emit OwnershipTransferred(address(0), _owner);
+  }
+
+  function initialize(address owner_) public virtual onlyOwner initializer {
+    transferOwnership(owner_);
+  }
+
+  function configure(address addr,bytes memory data) public virtual onlyOwner configurer {
     assert(_IMPLEMENTATION_SLOT == bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1));
     assert(_BEACON_SLOT == bytes32(uint256(keccak256('eip1967.proxy.beacon')) - 1));
     assert(_ADMIN_SLOT == bytes32(uint256(keccak256('eip1967.proxy.admin')) - 1));
@@ -52,6 +110,17 @@ contract Proxy {
 
     _setAdmin(msg.sender);
     _upgradeToAndCall(addr,data,false);
+  }
+
+  function transferOwnership(address newOwner) public virtual onlyOwner {
+    require(newOwner != address(0), "Ownable: new owner is the zero address");
+    _transferOwnership(newOwner);
+  }
+
+  function _transferOwnership(address newOwner) internal virtual {
+    address oldOwner = _owner;
+    _owner = newOwner;
+    emit OwnershipTransferred(oldOwner, newOwner);
   }
 
   function _getImplementation() private view returns (address) {

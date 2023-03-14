@@ -30,34 +30,61 @@ To compile this solidity code you'll need to run hardhat cli using `npx` like th
 npx hardhat compile
 ```
 
-Now you should be able to deploy your contract to goerli. To do this run the following:
+Now you should be able to deploy your contract to goerli or sepolia networks. To do this run the following:
 
 ```bash
 npx hardhat run scripts/factory.js
 npx hardhat run scripts/deploy.js
+npx hardhat run scripts/initialize.js
+npx hardhat run scripts/configure.js
 ```
 
 Depending on if you have specified a constructor in the contract section you might need to add a arguments file as input. The following output assumes you have uncommented the constructor and use our given `scripts/arguments.js` file but the run without constructor will not need any input so in that case you can press enter to continue:
 
 ```bash
 $ npx hardhat run scripts/factory.js
-Does factory contract exist (true/false): false
+Compiled 2 Solidity files successfully
+(node:255192) ExperimentalWarning: stream/web is an experimental feature. This feature could change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
 Deploying contracts with the account:  0xA7b192eBA8E0B07e2D25c632986fA4cB2666bB9f
-Account balance:  3730213907397598723
-Transaction hash of the factory deployment:  0x10acf5cf5f0c45d3c758b25fe70c5bb2a9fafbf9a6bfb71c9b5502f0c098e7e0
-Factory contract has been deployed at:  0xc0c4548729014da06976ad1337F59803e85166C9
+Account balance:  3161615962444600501
+Transaction hash of the factory deployment:  0x87e11535dc4f00ee9a08fb668a7ac5eade17e493e080d01e747122594b66298e
+Factory contract has been deployed at:  0x928F26d0F26E25820E159052Fa47c2F60D97A08a
+
 $ npx hardhat run scripts/deploy.js
-Arguments file for deployment: scripts/arguments.js
+(node:255287) ExperimentalWarning: stream/web is an experimental feature. This feature could change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
 Deploying contracts with the account:  0xA7b192eBA8E0B07e2D25c632986fA4cB2666bB9f
-Account balance:  3729527651065838027
-Factory contract has already been deployed at:  0xc0c4548729014da06976ad1337F59803e85166C9
-Deployment address of EIP20 contract from factory is:  0x2E9a7f274021A098ed6CC8B2152A7987c3885b7F
-Deployment address of Proxy contract from factory is:  0xdB836d76d1BF33Afe2000e4DcFB46dE6e01e5179
-Deployment of EIP20 contract from factory transaction:  0x9c27cded8c51dc07f9853a3d66e6e650c293025320c4fa33dd7fa85969753c18
+Account balance:  3159571507438876027
+Factory contract has already been deployed at:  0x928F26d0F26E25820E159052Fa47c2F60D97A08a
+Deployment address of EIP20 contract from factory is:  0xd5Aa6d6CA999fe736661653Ed430875B5f9a6a82
+Deployment address of Proxy contract from factory is:  0x96D6A96b69Cb5eAcA43F41789cbD66aFE7F124Df
+Deployment of EIP20 contract from factory transaction:  0x36d8f21b837cfd7800a06e43af0ae772cc48a9167fe696eedee60d45175536fc
 Deployment of EIP20 contract from factory is complete
-Deployment of Proxy contract from factory transaction:  0x1534a99e76722ac7eca73ec7a34cf8bccf8249c0692ed9b59416b8dc13ee3ec6
+Deployment of Proxy contract from factory transaction:  0xa3c9deb1ddbbd4be8454f346e403cc831e8e0be2d289b26c0165f3d64a54ff7a
 Deployment of Proxy contract from factory is complete
 
+$ npx hardhat run scripts/initialize.js
+(node:255526) ExperimentalWarning: stream/web is an experimental feature. This feature could change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Deploying contracts with the account:  0xA7b192eBA8E0B07e2D25c632986fA4cB2666bB9f
+Account balance:  3152463802418974453
+Deployment address of EIP20 contract from factory is:  0xd5Aa6d6CA999fe736661653Ed430875B5f9a6a82
+Deployment address of Proxy contract from factory is:  0x96D6A96b69Cb5eAcA43F41789cbD66aFE7F124Df
+Initialization of EIP20 contract from factory transaction:  0x1ac041c1daf2d9dc4d4e0dcd0d70bf45cfcd26014eaf65c0c328d879e175a521
+Initialization of EIP20 contract from factory is complete
+Initialization of Proxy contract from factory transaction:  0x994bab249c86cd7080aa7613d49c6bfdffce6067633acda51de629ad00594564
+Initialization of Proxy contract from factory is complete
+
+$ npx hardhat run scripts/configure.js
+(node:255636) ExperimentalWarning: stream/web is an experimental feature. This feature could change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Deploying contracts with the account:  0xA7b192eBA8E0B07e2D25c632986fA4cB2666bB9f
+Account balance:  3152215762418279941
+Deployment address of EIP20 contract from factory is:  0xd5Aa6d6CA999fe736661653Ed430875B5f9a6a82
+Deployment address of Proxy contract from factory is:  0x96D6A96b69Cb5eAcA43F41789cbD66aFE7F124Df
+Configuration of contracts from factory transaction:  0xa3835cf9140281fe4c98bc9949b64cbd6cd5068cd523923e0ff1fac41a4079ec
+Configuration of contracts from factory is complete
 ```
 
 ## Verify on etherscan
@@ -67,45 +94,33 @@ Now that this contract has been deployed it makes sense to verify the contracts 
 To run this verify on the deployed contract you run the following:
 
 ```bash
-npx hardhat verify <contract-address> --constructor-args <constructor-arguments-file>
+npx hardhat verify <contract-address> <factory-contract-address>
 ```
 
 You can find the contract address from where it says `Contract has been deployed at:` and the constructor arguments file should be the same one you used as input to the `Arguments file for deployment:` section. You can see an example of this with the constructor defined bellow and after it will output the goerli etherscan page:
 
 ```bash
-$ npx hardhat verify 0xc0c4548729014da06976ad1337F59803e85166C9
+$ npx hardhat verify 0xd5Aa6d6CA999fe736661653Ed430875B5f9a6a82 0x928F26d0F26E25820E159052Fa47c2F60D97A08a
+(node:255780) ExperimentalWarning: stream/web is an experimental feature. This feature could change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
 Nothing to compile
 Successfully submitted source code for contract
-contracts/factory.sol:Factory at 0xc0c4548729014da06976ad1337F59803e85166C9
+contracts/eip-20.sol:EIP20 at 0xd5Aa6d6CA999fe736661653Ed430875B5f9a6a82
 for verification on the block explorer. Waiting for verification result...
 
-Error in plugin @nomiclabs/hardhat-etherscan: The Etherscan API responded with a failure status.
-The verification may still succeed but should be checked manually.
-Reason: Already Verified
+Successfully verified contract EIP20 on Etherscan.
+https://sepolia.etherscan.io/address/0xd5Aa6d6CA999fe736661653Ed430875B5f9a6a82#code
 
-For more info run Hardhat with --show-stack-traces
-$ npx hardhat verify 0x2E9a7f274021A098ed6CC8B2152A7987c3885b7F
+$ npx hardhat verify 0x96D6A96b69Cb5eAcA43F41789cbD66aFE7F124Df 0x928F26d0F26E25820E159052Fa47c2F60D97A08a
+(node:255815) ExperimentalWarning: stream/web is an experimental feature. This feature could change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
 Nothing to compile
 Successfully submitted source code for contract
-contracts/eip-20.sol:EIP20 at 0x2E9a7f274021A098ed6CC8B2152A7987c3885b7F
+contracts/proxy.sol:Proxy at 0x96D6A96b69Cb5eAcA43F41789cbD66aFE7F124Df
 for verification on the block explorer. Waiting for verification result...
 
-Error in plugin @nomiclabs/hardhat-etherscan: The Etherscan API responded with a failure status.
-The verification may still succeed but should be checked manually.
-Reason: Already Verified
-
-For more info run Hardhat with --show-stack-traces
-$ npx hardhat verify 0xdB836d76d1BF33Afe2000e4DcFB46dE6e01e5179 --constructor-args scripts/arguments.js
-Nothing to compile
-Successfully submitted source code for contract
-contracts/proxy.sol:Proxy at 0xdB836d76d1BF33Afe2000e4DcFB46dE6e01e5179
-for verification on the block explorer. Waiting for verification result...
-
-Error in plugin @nomiclabs/hardhat-etherscan: The Etherscan API responded with a failure status.
-The verification may still succeed but should be checked manually.
-Reason: Already Verified
-
-For more info run Hardhat with --show-stack-traces
+Successfully verified contract Proxy on Etherscan.
+https://sepolia.etherscan.io/address/0x96D6A96b69Cb5eAcA43F41789cbD66aFE7F124Df#code
 ```
 
 ## Run a transaction
@@ -119,7 +134,7 @@ npx hardhat tx --function-name <contract-function-name> --function-args <contrac
 Your out should look like the following:
 
 ```bash
-npx hardhat tx --function-name name --function-args [] --address "0x11498137d94CbE5485Dc1B1225Dc0fbBD640D83b"
+npx hardhat tx --function-name name --function-args [] --address "0x96D6A96b69Cb5eAcA43F41789cbD66aFE7F124Df"
 MyToken
 ```
 
@@ -128,20 +143,20 @@ MyToken
 There might be a need to check that the `Transfer` event has been triggered and to debug its output. You can view the list of logs on the deployed contract by running the following:
 
 ```bash
-npx hardhat logs
+npx hardhat logs --address <eip20-proxy-address>
 ```
 
 Your output should then look like the following:
 
 ```bash
-$ npx hardhat logs
+$ npx hardhat logs --address "0x96D6A96b69Cb5eAcA43F41789cbD66aFE7F124Df"
 {
   event: 'Transfer',
   eventSignature: 'Transfer(address,address,uint256)',
-  address: '0x0F7aCFE8A171B001D9f9826122c8fc3fAc117D65',
+  address: '0x96D6A96b69Cb5eAcA43F41789cbD66aFE7F124Df',
   data: '0x0000000000000000000000000000000000000000000000000de0b6b3a7640000',
-  blockHash: '0x37c22cf48856b7cd59e01e949c6a1c56ff7d8509633bdff0da92eb1f3eeccf43',
-  transactionHash: '0xc4a539e39404904061f7f5d3299d952ef63e30332a9c156d072b9f5718449892',
+  blockHash: '0x213097ac015aaf0a306082232a7f351fa583e3a67ee58bf2a09ba6bdbca9e3e0',
+  transactionHash: '0xa3835cf9140281fe4c98bc9949b64cbd6cd5068cd523923e0ff1fac41a4079ec',
   topics: [
     '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef',
     '0x0000000000000000000000000000000000000000000000000000000000000000',
