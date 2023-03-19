@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract EIP20 {
+import "./access.sol";
+
+contract EIP20 is AccessControl {
   struct airdrop {
     address airdropAddress;
     uint256 airdropAmount;
@@ -27,16 +29,15 @@ contract EIP20 {
 
   mapping(address => mapping(address => uint256)) private _allowances;
 
+  bytes32 public constant INITIALIZER_ROLE = keccak256("INITIALIZER_ROLE");
+
+  bytes32 public constant CONFIGURER_ROLE = keccak256("CONFIGURER_ROLE");
+
   event Transfer(address indexed from,address indexed to,uint256 value);
 
   event Approval(address indexed owner,address indexed spender,uint256 value);
 
   event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-
-  modifier onlyOwner() {
-    require(_owner == msg.sender, "Ownable: caller is not the owner");
-    _;
-  }
 
   modifier initializer() {
     require(_initializing || !_initialized, "Contract instance has already been initialized");
@@ -72,15 +73,18 @@ contract EIP20 {
 
   constructor(address owner_) {
     require(owner_ != address(0), "Ownable: new owner is the zero address");
-    _owner = owner_;
-    emit OwnershipTransferred(address(0), _owner);
+
+    _setRoleAdmin(INITIALIZER_ROLE, INITIALIZER_ROLE);
+    _setRoleAdmin(CONFIGURER_ROLE, INITIALIZER_ROLE);
+
+    _setupRole(INITIALIZER_ROLE, owner_);
   }
 
-  function initialize(address owner_) public virtual onlyOwner initializer {
-    transferOwnership(owner_);
+  function initialize(address configurer_) public virtual onlyRole(INITIALIZER_ROLE) initializer {
+    grantRole(CONFIGURER_ROLE,configurer_);
   }
 
-  function configure(string memory name_,string memory symbol_,airdrop[] memory airdrop_) public virtual onlyOwner configurer {
+  function configure(string memory name_,string memory symbol_,airdrop[] memory airdrop_) public virtual onlyRole(CONFIGURER_ROLE) configurer {
     _name = name_;
     _symbol = symbol_;
 
@@ -130,17 +134,6 @@ contract EIP20 {
     _spendAllowance(from, spender, amount);
     _transfer(from, to, amount);
     return true;
-  }
-
-  function transferOwnership(address newOwner) public virtual onlyOwner {
-    require(newOwner != address(0), "Ownable: new owner is the zero address");
-    _transferOwnership(newOwner);
-  }
-
-  function _transferOwnership(address newOwner) internal virtual {
-    address oldOwner = _owner;
-    _owner = newOwner;
-    emit OwnershipTransferred(oldOwner, newOwner);
   }
 
   function _mint(address account, uint256 amount) internal virtual {

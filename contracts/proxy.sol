@@ -2,6 +2,8 @@
 
 pragma solidity ^0.8.0;
 
+import "./access.sol";
+
 library StorageSlot {
   struct AddressSlot {
     address value;
@@ -28,9 +30,7 @@ interface IBeacon {
   function implementation() external view returns (address);
 }
 
-contract Proxy {
-  address private _owner;
-
+contract Proxy is AccessControl {
   bool private _initialized;
 
   bool private _initializing;
@@ -39,13 +39,17 @@ contract Proxy {
 
   bool private _configuring;
 
-  bytes32 private constant _ROLLBACK_SLOT = 0x4910fdfa16fed3260ed0e7147f7cc6da11a60208b5b9406d12a635614ffd9143;
+  bytes32 private constant _ROLLBACK_SLOT = bytes32(uint256(keccak256('eip1967.proxy.rollback')) - 1);
 
-  bytes32 internal constant _IMPLEMENTATION_SLOT = 0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc;
+  bytes32 internal constant _IMPLEMENTATION_SLOT = bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1);
 
-  bytes32 internal constant _ADMIN_SLOT = 0xb53127684a568b3173ae13b9f8a6016e243e63b6e8ee1178d6a717850b5d6103;
+  bytes32 internal constant _ADMIN_SLOT = bytes32(uint256(keccak256('eip1967.proxy.admin')) - 1);
 
-  bytes32 internal constant _BEACON_SLOT = 0xa3f0ad74e5423aebfd80d3ef4346578335a9a72aeaee59ff6cb3582b35133d50;
+  bytes32 internal constant _BEACON_SLOT = bytes32(uint256(keccak256('eip1967.proxy.beacon')) - 1);
+
+  bytes32 public constant INITIALIZER_ROLE = keccak256("INITIALIZER_ROLE");
+
+  bytes32 public constant CONFIGURER_ROLE = keccak256("CONFIGURER_ROLE");
 
   event Upgraded(address indexed implementation);
 
@@ -54,11 +58,6 @@ contract Proxy {
   event AdminChanged(address previousAdmin, address newAdmin);
 
   event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
-
-  modifier onlyOwner() {
-    require(_owner == msg.sender, "Ownable: caller is not the owner");
-    _;
-  }
 
   modifier initializer() {
     require(_initializing || !_initialized, "Contract instance has already been initialized");
@@ -94,33 +93,20 @@ contract Proxy {
 
   constructor(address owner_) {
     require(owner_ != address(0), "Ownable: new owner is the zero address");
-    _owner = owner_;
-    emit OwnershipTransferred(address(0), _owner);
+
+    _setRoleAdmin(INITIALIZER_ROLE, INITIALIZER_ROLE);
+    _setRoleAdmin(CONFIGURER_ROLE, INITIALIZER_ROLE);
+
+    _setupRole(INITIALIZER_ROLE, owner_);
   }
 
-  function initialize(address owner_) public virtual onlyOwner initializer {
-    transferOwnership(owner_);
+  function initialize(address configurer_) public virtual onlyRole(INITIALIZER_ROLE) initializer {
+    grantRole(CONFIGURER_ROLE,configurer_);
   }
 
-  function configure(address addr,bytes memory data) public virtual onlyOwner configurer {
-    assert(_IMPLEMENTATION_SLOT == bytes32(uint256(keccak256("eip1967.proxy.implementation")) - 1));
-    assert(_BEACON_SLOT == bytes32(uint256(keccak256('eip1967.proxy.beacon')) - 1));
-    assert(_ADMIN_SLOT == bytes32(uint256(keccak256('eip1967.proxy.admin')) - 1));
-    assert(_ROLLBACK_SLOT == bytes32(uint256(keccak256('eip1967.proxy.rollback')) - 1));
-
+  function configure(address addr,bytes memory data) public virtual onlyRole(CONFIGURER_ROLE) configurer {
     _setAdmin(msg.sender);
     _upgradeToAndCall(addr,data,false);
-  }
-
-  function transferOwnership(address newOwner) public virtual onlyOwner {
-    require(newOwner != address(0), "Ownable: new owner is the zero address");
-    _transferOwnership(newOwner);
-  }
-
-  function _transferOwnership(address newOwner) internal virtual {
-    address oldOwner = _owner;
-    _owner = newOwner;
-    emit OwnershipTransferred(oldOwner, newOwner);
   }
 
   function _getImplementation() private view returns (address) {
