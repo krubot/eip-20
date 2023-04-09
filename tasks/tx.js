@@ -4,30 +4,39 @@ task("tx", "Run a transaction against the contract ABI")
     .addParam("functionName", "The contract function to call here")
     .addParam("functionArgs", "The contract function arguments to be run here")
     .addParam("address", "The contract to attach too")
+    .addParam("contract", "Contract name to call too")
     .addOptionalParam("gasLimit", "The gas limit set for the transaction")
     .addOptionalParam("value", "The eth value given to the transaction")
     .setAction(async (taskArgs) => {
-      const EIP20 = await ethers.getContractFactory("EIP20");
+      const Contract = await ethers.getContractFactory(taskArgs.contract);
 
-      const eip20 = await EIP20.attach(taskArgs.address);
+      const contract = await Contract.attach(taskArgs.address);
 
       var functionArgsObject = JSON.parse(taskArgs.functionArgs);
 
       if (typeof(taskArgs.gasLimit) !== "undefined") {
         if (typeof(taskArgs.value) !== "undefined") {
-          var result = await eip20[taskArgs.functionName](...functionArgsObject,{gasLimit : taskArgs.gasLimit,value : taskArgs.value});
+          var tx = await contract[taskArgs.functionName](...functionArgsObject,{gasLimit : taskArgs.gasLimit,value : taskArgs.value});
         } else {
-          var result = await eip20[taskArgs.functionName](...functionArgsObject,{gasLimit : taskArgs.gasLimit});
+          var tx = await contract[taskArgs.functionName](...functionArgsObject,{gasLimit : taskArgs.gasLimit});
         }
       } else {
         if (typeof(taskArgs.value) !== "undefined") {
-          var result = await eip20[taskArgs.functionName](...functionArgsObject,{value : taskArgs.value});
+          var tx = await contract[taskArgs.functionName](...functionArgsObject,{value : taskArgs.value});
         } else {
-          var result = await eip20[taskArgs.functionName](...functionArgsObject);
+          var tx = await contract[taskArgs.functionName](...functionArgsObject);
         }
       }
 
-      console.log(result);
+      if (typeof(tx.hash) !== "undefined") {
+        console.log("Transaction with the following hash has been triggered: ",tx.hash);
+
+        tx.wait();
+
+        console.log("Transaction has gone through successfully");
+      } else {
+        console.log("Function has given the following output: ",tx);
+      }
 })
 
 module.exports = {}

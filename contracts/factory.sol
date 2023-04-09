@@ -41,7 +41,7 @@ contract Factory {
     emit Deployed(addr, salt);
   }
 
-  function delegateCall(address target,bytes memory data) public onlyOwner returns (bytes memory) {
+  function call(address target,bytes memory data) public onlyOwner returns (bytes memory) {
     (bool success, bytes memory returndata) = target.call(data);
     if (success) {
         if (returndata.length == 0) {

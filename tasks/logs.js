@@ -2,16 +2,22 @@ require("dotenv").config();
 
 task("logs", "Gets the Transfer logs on the current contract")
   .addParam("address", "The contract to attach too")
+  .addParam("contract", "Contract name to call too")
+  .addOptionalParam("event", "Event to listen out for")
   .setAction(async (taskArgs) => {
   const accounts = await ethers.getSigners()
 
-  const EIP20 = await ethers.getContractFactory("EIP20");
+  const Contract = await ethers.getContractFactory(taskArgs.contract);
 
-  var eip20 = EIP20.attach(taskArgs.address);
+  var contract = Contract.attach(taskArgs.address);
 
-  let eventFilter = eip20.filters.Transfer();
+  if (typeof(taskArgs.event) == "undefined") {
+    var eventFilter = contract.filters;
+  } else {
+    var eventFilter = contract.filters[taskArgs.event]();
+  }
 
-  let events = await eip20.queryFilter(eventFilter);
+  let events = await contract.queryFilter(eventFilter);
 
   for (let event of events) {
     console.log({

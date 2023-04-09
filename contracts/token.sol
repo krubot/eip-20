@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./access.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
-contract EIP20 is AccessControl {
+contract Token is AccessControlEnumerable,Initializable {
   struct airdrop {
     address airdropAddress;
     uint256 airdropAmount;
@@ -17,21 +18,11 @@ contract EIP20 is AccessControl {
 
   uint256 private _totalSupply;
 
-  bool private _initialized;
-
-  bool private _initializing;
-
-  bool private _configured;
-
-  bool private _configuring;
-
   mapping(address => uint256) private _balances;
 
   mapping(address => mapping(address => uint256)) private _allowances;
 
-  bytes32 public constant INITIALIZER_ROLE = keccak256("INITIALIZER_ROLE");
-
-  bytes32 public constant CONFIGURER_ROLE = keccak256("CONFIGURER_ROLE");
+  bytes32 public constant UPGRADER_ROLE = keccak256("UPGRADER_ROLE");
 
   event Transfer(address indexed from,address indexed to,uint256 value);
 
@@ -39,58 +30,20 @@ contract EIP20 is AccessControl {
 
   event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
-  modifier initializer() {
-    require(_initializing || !_initialized, "Contract instance has already been initialized");
-
-    bool isTopLevelCall = !_initializing;
-    if (isTopLevelCall) {
-      _initializing = true;
-      _initialized = true;
-    }
-
-    _;
-
-    if (isTopLevelCall) {
-      _initializing = false;
-    }
+  constructor() {
+    _disableInitializers();
   }
 
-  modifier configurer() {
-    require(_configuring || !_configured, "Contract instance has already been initialized");
-
-    bool isTopLevelCall = !_configuring;
-    if (isTopLevelCall) {
-      _configuring = true;
-      _configured = true;
-    }
-
-    _;
-
-    if (isTopLevelCall) {
-      _configuring = false;
-    }
-  }
-
-  constructor(address owner_) {
-    require(owner_ != address(0), "Ownable: new owner is the zero address");
-
-    _setRoleAdmin(INITIALIZER_ROLE, INITIALIZER_ROLE);
-    _setRoleAdmin(CONFIGURER_ROLE, INITIALIZER_ROLE);
-
-    _setupRole(INITIALIZER_ROLE, owner_);
-  }
-
-  function initialize(address configurer_) public virtual onlyRole(INITIALIZER_ROLE) initializer {
-    grantRole(CONFIGURER_ROLE,configurer_);
-  }
-
-  function configure(string memory name_,string memory symbol_,airdrop[] memory airdrop_) public virtual onlyRole(CONFIGURER_ROLE) configurer {
+  function initialize(string memory name_,string memory symbol_,airdrop[] memory airdrop_) public virtual initializer {
     _name = name_;
     _symbol = symbol_;
 
     for (uint i = 0; i < airdrop_.length; i++) {
       _mint(airdrop_[i].airdropAddress,airdrop_[i].airdropAmount);
     }
+
+    _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    _grantRole(UPGRADER_ROLE, msg.sender);
   }
 
   function name() public view virtual returns (string memory) {
